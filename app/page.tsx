@@ -22,6 +22,12 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
 
+  const [showPastePanel, setShowPastePanel] = useState(false);
+  const [pasteCode, setPasteCode] = useState("");
+  const [pasteFilename, setPasteFilename] = useState("");
+  const [pasteUploading, setPasteUploading] = useState(false);
+  const [viewFile, setViewFile] = useState<{ name: string; content: string } | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -181,6 +187,57 @@ export default function Home() {
     }
   }
 
+  async function handlePasteUpload() {
+    if (!pasteCode.trim()) {
+      showToast("Nothing to upload — paste some code first", "err");
+      return;
+    }
+    const rawName = pasteFilename.trim() || "snippet";
+    const filename = rawName.endsWith(".txt") ? rawName : `${rawName}.txt`;
+    const blob = new Blob([pasteCode], { type: "text/plain" });
+
+    setPasteUploading(true);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "x-filename": encodeURIComponent(filename),
+          "x-admin-secret": adminSecret,
+          "content-type": "text/plain",
+          "content-length": String(blob.size),
+        },
+        body: blob,
+        // @ts-expect-error — duplex needed for streaming body in some envs
+        duplex: "half",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Upload failed", "err");
+      } else {
+        showToast(`${filename} created ✓`);
+        setPasteCode("");
+        setPasteFilename("");
+        setShowPastePanel(false);
+        fetchFiles();
+      }
+    } catch {
+      showToast("Upload failed", "err");
+    } finally {
+      setPasteUploading(false);
+    }
+  }
+
+  async function handleViewFile(file: { url: string; pathname: string }) {
+    const name = nameFromPathname(decodeURIComponent(file.pathname));
+    try {
+      const res = await fetch(file.url);
+      const text = await res.text();
+      setViewFile({ name, content: text });
+    } catch {
+      showToast("Could not load file content", "err");
+    }
+  }
+
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragging(false);
@@ -277,6 +334,48 @@ export default function Home() {
           </div>
         )}
 
+        {/* Paste-code panel — shown to admin only */}
+        {isAdmin && (
+          <div className={styles.pasteSection}>
+            <button
+              className={`${styles.btn} ${showPastePanel ? styles.primary : ""}`}
+              onClick={() => setShowPastePanel((v) => !v)}
+            >
+              📋 {showPastePanel ? "Close" : "Paste Code"}
+            </button>
+
+            {showPastePanel && (
+              <div className={styles.pasteCard}>
+                <p className={styles.pasteLabel}>Paste your code or text below — it will be saved as a .txt file.</p>
+                <input
+                  className={styles.pasteInput}
+                  type="text"
+                  placeholder="Filename (e.g. my-script) — defaults to snippet.txt"
+                  value={pasteFilename}
+                  onChange={(e) => setPasteFilename(e.target.value)}
+                />
+                <textarea
+                  className={styles.pasteTextarea}
+                  placeholder="Paste code here…"
+                  value={pasteCode}
+                  onChange={(e) => setPasteCode(e.target.value)}
+                  spellCheck={false}
+                />
+                <div className={styles.pasteActions}>
+                  <span className={styles.pasteChars}>{pasteCode.length} chars</span>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={handlePasteUpload}
+                    disabled={pasteUploading || !pasteCode.trim()}
+                  >
+                    {pasteUploading ? "Saving…" : "Save as .txt ↑"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* File list */}
         <div className={styles.sectionHead}>
           <p className={styles.sectionTitle}>Files</p>
@@ -301,6 +400,7 @@ export default function Home() {
                 decodeURIComponent(file.pathname)
               );
               const isDeleting = deletingUrl === file.url;
+              const isText = /\.(txt|md|csv|json|xml|html|css|js|ts|py|cs|log|sh|yaml|yml|ini|env|toml|sql|tsx|jsx|mjs|cjs)$/i.test(name);
               return (
                 <div key={file.url} className={`${styles.fileCard} ${isDeleting ? styles.deleting : ""}`}>
                   <div className={styles.fileIcon}>
@@ -314,6 +414,15 @@ export default function Home() {
                     </p>
                   </div>
                   <div className={styles.fileActions}>
+                    {isText && (
+                      <button
+                        className={`${styles.btn} ${styles.sm}`}
+                        onClick={() => handleViewFile(file)}
+                        aria-label={`View ${name}`}
+                      >
+                        👁 View
+                      </button>
+                    )}
                     <a
                       className={`${styles.btn} ${styles.sm}`}
                       href={file.downloadUrl}
@@ -350,6 +459,19 @@ export default function Home() {
       {toast && (
         <div className={`${styles.toast} ${toast.type === "err" ? styles.toastErr : styles.toastOk}`}>
           {toast.msg}
+        </div>
+      )}
+
+      {/* File viewer modal */}
+      {viewFile && (
+        <div className={styles.modalOverlay} onClick={() => setViewFile(null)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span className={styles.modalTitle}>{viewFile.name}</span>
+              <button className={`${styles.btn} ${styles.sm}`} onClick={() => setViewFile(null)}>✕ Close</button>
+            </div>
+            <pre className={styles.modalContent}>{viewFile.content}</pre>
+          </div>
         </div>
       )}
     </>
