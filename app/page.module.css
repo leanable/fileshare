@@ -404,6 +404,136 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ── Paste-code section ── */
+.pasteSection {
+  margin-bottom: 1.5rem;
+}
+
+.pasteCard {
+  margin-top: 0.75rem;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.pasteLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pasteInput {
+  height: 36px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px;
+  padding: 0 12px;
+  outline: none;
+  transition: border-color 0.12s;
+  font-family: inherit;
+}
+
+.pasteInput:focus {
+  border-color: var(--accent);
+}
+
+.pasteTextarea {
+  min-height: 200px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  line-height: 1.6;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.12s;
+  tab-size: 2;
+}
+
+.pasteTextarea:focus {
+  border-color: var(--accent);
+}
+
+.pasteActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pasteChars {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── File viewer modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease;
+}
+
+.modalBox {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 720px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.modalTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.modalContent {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+  font-size: 13px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre;
+  margin: 0;
+  tab-size: 2;
+}
+
 /* ── Mobile tweaks ── */
 @media (max-width: 480px) {
   .dropZone {
@@ -424,5 +554,13 @@
     height: 30px;
     font-size: 11px;
     padding: 0 8px;
+  }
+
+  .pasteTextarea {
+    min-height: 150px;
+  }
+
+  .modalBox {
+    max-height: 90vh;
   }
 }
