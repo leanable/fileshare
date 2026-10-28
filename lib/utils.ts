@@ -36,7 +36,7 @@ const KNOWN_ICONS = new Set([
   "zip", "rar", "7z", "tar", "gz", "archive",
   "txt", "md", "csv", "json", "xml",
   "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-  "js", "ts", "py", "html", "css",
+  "js", "ts", "py", "html", "css", "cs",
 ]);
 
 /** Returns the public URL of the icon image for a filename. */
